@@ -1,0 +1,29 @@
+# Dynamic configuration file for allowing the Traefik Dashboard to be accessed
+# This example assumes the static config is set to permit this.
+# 
+# This file is only relevant for exposing the Dashboard, and may be disabled / removed
+# The embedded username/password need to be regenerated using htpasswd
+# For more info about auth, see https://doc.traefik.io/traefik/middlewares/basicauth/
+#
+# Please note the hostnames that are used to access the dashboard - they will need to be different
+
+# Add a router for HTTPS redirection (can't mix HTTP+HTTPS within routers that terminate TLS)
+[http.routers.traefik-https-redirect]
+  entryPoints = ["web"]
+  service = "api@internal"
+  middlewares = ["https-redirectscheme"]
+  rule = "Host(`traefik.local`) || Host(`traefik-dev.cinegy.com`)"
+
+# Add a router for reaching the api + dashboard
+[http.routers.traefik-api]
+  entryPoints = ["webSecure"]
+  rule = "Host(`traefik.local`) || Host(`traefik-dev.cinegy.com`)"
+  service = "api@internal"
+  middlewares = ["dashauth"]
+  [http.routers.traefik-api.tls]
+
+#enable basic auth login to access the dashboard
+[http.middlewares.dashauth.basicAuth]
+  users = [
+    "admin:$apr1$gkczdPhj$UBSo9KTnxNou8M6DRnwxi/"
+  ]

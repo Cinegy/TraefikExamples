@@ -1,0 +1,3 @@
+traefik.exe
+certs/somesecretcert.key
+certs/somesecretcert.crt

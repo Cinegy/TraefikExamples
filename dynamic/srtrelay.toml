@@ -1,0 +1,18 @@
+# Dynamic configuration file for forwarding SRT traffic
+# This example assumes the targetted SRT machine is accessible on some routable IP
+# 
+# This file is only relevant for exposing SRT (e.g. from private subnetted EC2 machines in AWS)
+
+## Dynamic configuration for forwarding SRT
+[udp.routers]
+  [udp.routers.srt1-router]
+    # does not listen on "other" entry point
+    entryPoints = ["srt1"]
+    service = "srt1-service"
+
+[udp.services]
+  [udp.services.srt1-service.loadBalancer]
+     [[udp.services.srt1-service.loadBalancer.servers]]
+       address = "3.249.242.229:6000"
+     #[[udp.services.my-service.loadBalancer.servers]]
+     #  address = "<private-ip-server-2>:<private-port-server-2>"

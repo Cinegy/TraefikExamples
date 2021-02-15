@@ -1,0 +1,27 @@
+# Dynamic configuration file for shared resources
+# This file is shared by multiple other dynamic files, so should be adapted with caution.
+#
+
+##########################
+# Define shared certificates
+##########################
+
+#some example self-signed certificates (replace or remove)
+[[tls.certificates]]
+  certFile = "./certs/selfsigned.crt"
+  keyFile = "./certs/selfsigned.key"
+
+##########################
+# Define shared middlewares
+##########################
+
+#HTTP to HTTPS redirection middleware
+[http.middlewares]
+  [http.middlewares.https-redirectscheme.redirectScheme]
+    scheme = "https"
+    permanent = true
+
+# Set the default document to index.html
+  [http.middlewares.add-default-doc.replacePathRegex]
+    regex = "^(/)?$"
+    replacement = "/index.html"

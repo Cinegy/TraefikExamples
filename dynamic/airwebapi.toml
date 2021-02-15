@@ -1,0 +1,62 @@
+# Dynamic configuration file for Air Control REST API
+# This example assumes the service runs on localhost
+# 
+# This file is only relevant for exposing Cinegy Air services
+#
+# Please note the hostnames that are used to access the dashboard - they will need to be different
+
+# Add a router that serves to redirect to HTTPS
+[http.routers.air-frontend-insecure]
+  entryPoints = ["web"]
+  service = "air-frontend-cdn"
+  middlewares = ["https-redirectscheme"]
+  rule = "Host(`airdemo.cinegy.com`)"
+
+# Add a router for air-api
+[http.routers.air-api]
+  entryPoints = ["webSecure"]
+  service = "air-api"
+  middlewares = ["air-auth"]
+  rule = "Host(`airdemo.cinegy.com`) && (PathPrefix(`/air/`) || PathPrefix(`/airHub`))"
+  [http.routers.air-api.tls]
+
+# Add a router for air frontend
+[http.routers.air-frontend]
+  entryPoints = ["webSecure"]
+  service = "air-frontend-cdn"
+  middlewares = ["air-auth","add-default-doc","air-add-branch"]
+  rule = "Host(`airdemo.cinegy.com`)"
+  [http.routers.air-frontend.tls]
+
+
+##########################
+# Define services
+##########################
+
+# Add the API service
+[http.services.air-api]
+  [http.services.air-api.loadBalancer]
+    [[http.services.air-api.loadBalancer.servers]]
+      url = "http://localhost:7501/"
+      
+# Add the static CDN service
+[http.services.air-frontend-cdn]
+  [http.services.air-frontend-cdn.loadBalancer]
+    passHostHeader = false
+    [[http.services.air-frontend-cdn.loadBalancer.servers]]
+      url = "https://air.qa.cinegy.com/"
+
+
+##########################
+# Define middlewares
+##########################
+
+# Add suffix branch name into path for frontend
+  [http.middlewares.air-add-branch.addPrefix]
+    prefix = "/master"
+
+# middleware for basic auth login testing
+  [http.middlewares.air-auth.basicAuth]
+    users = [
+      "admin:$apr1$gkczdPhj$UBSo9KTnxNou8M6DRnwxi/"
+    ]

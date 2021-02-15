@@ -1,0 +1,98 @@
+# Dynamic configuration file for Cinegy Workspace serving
+# This example assumes the service runs on various machines accessible to the Traefik host
+# 
+# This file is only relevant for exposing Cinegy Workspace services
+#
+# Please note the hostnames that are used to access the dashboard - they will need to be different
+# This file is referenced by https://open.cinegy.com/misc/workspace-deployment/ - see this post for more details
+
+##########################
+# Define routers
+##########################
+
+# Add a router for mams
+[http.routers.mams]
+  entryPoints = ["webSecure"]
+  service = "mams"
+  #use the below rule instead to enable the swagger interface
+  rule = "Host(`workspacedemo.cinegy.com`) && PathPrefix(`/mams`) || PathPrefix(`/sandbox`) || PathPrefix(`/docs`)"
+  #rule = "PathPrefix(`/mams`)" 
+  [http.routers.mams.tls]
+  
+# Add a router for image service
+[http.routers.image]
+  entryPoints = ["webSecure"]
+  service = "image"
+  rule = "Host(`workspacedemo.cinegy.com`) && PathPrefix(`/image_service`)"
+  [http.routers.image.tls]
+
+# Add a router for config serving
+[http.routers.config]
+  entryPoints = ["webSecure"]
+  service = "configbucket"
+  middlewares = ["rewrite-config"]
+  rule = "Host(`workspacedemo.cinegy.com`) && PathPrefix(`/serviceconfig`)"  
+  [http.routers.config.tls]
+
+# Add a router for static frontend content
+[http.routers.frontend]
+  entryPoints = ["webSecure"]
+  service = "bucket"
+  middlewares = ["add-default-doc","rewrite-virtual-paths","add-branch"]
+  rule = "Host(`workspacedemo.cinegy.com`)"
+  [http.routers.frontend.tls]
+
+##########################
+# Define services
+##########################
+
+# Add the MAM service
+[http.services.mams]
+  [http.services.mams.loadBalancer]
+    [[http.services.mams.loadBalancer.servers]]
+      url = "http://cinebscasdev1:7601/"
+
+# Add the image service
+[http.services.image]
+  [http.services.image.loadBalancer]
+    [[http.services.image.loadBalancer.servers]]
+      url = "http://cinebscasdev1:12600/"
+
+# Add the static bucket service
+[http.services.bucket]
+  [http.services.bucket.loadBalancer]
+    passHostHeader = false
+    [[http.services.bucket.loadBalancer.servers]]
+      url = "https://workspace.qa.cinegy.com/"
+
+# Add a config bucket service
+[http.services.configbucket]
+  [http.services.configbucket.loadBalancer]
+    passHostHeader = false
+    [[http.services.configbucket.loadBalancer.servers]]
+      url = "https://cinegy-qa-workspace-config-serving-blue-teamcity.s3-eu-west-1.amazonaws.com/"
+
+
+##########################
+# Define middlewares
+##########################
+
+# Add suffix branch name into path for frontend
+  [http.middlewares.add-branch.addPrefix]
+    prefix = "/master"
+
+# Set the default document to index.html
+  [http.middlewares.add-default-doc.replacePathRegex]
+    regex = "^(/)?$"
+    replacement = "/index.html"
+    
+# reset anyone requesting virtual paths to index.html
+  [http.middlewares.rewrite-virtual-paths.redirectRegex]
+    regex = "(login|main)$"
+    replacement = "index.html"
+
+# redirect requests for the config to the s3 bucket i put the config in
+  [http.middlewares.rewrite-config.replacePathRegex]
+    regex = "/serviceconfig"
+    replacement = "/default/config.json"
+    

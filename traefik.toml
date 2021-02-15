@@ -1,0 +1,74 @@
+################################################################
+#
+# Cinegy Example static configuration for Traefik v2.
+#
+################################################################
+
+################################################################
+# Global configuration
+################################################################
+[global]
+  checkNewVersion = true
+  sendAnonymousUsage = false
+
+################################################################
+# Entrypoints configuration
+################################################################
+
+# Entrypoints definition
+[entryPoints]
+
+  #production systems will likely want to change this to standard port 80
+  [entryPoints.web]
+    address = ":8088"
+
+  #production systems will likely want to change this to standard port 443
+  [entryPoints.webSecure]
+    address = ":4438"
+
+  #this entrypoint port is used if relaying SRT UDP traffic through this reverse proxy
+  [entryPoints.srt1]
+    address = ":6000/udp"
+
+################################################################
+# Traefik logs configuration
+################################################################
+
+# Traefik logs
+# Enabled by default and log to stdout
+[log]
+  level = "INFO"
+
+################################################################
+# Access logs configuration
+################################################################
+
+# Enable access logs
+[accessLog]
+  # filePath = "/path/to/log/log.txt"
+  # format = "json"
+
+################################################################
+# API and dashboard configuration
+################################################################
+
+# Enable API and dashboard
+[api]
+  dashboard = true
+  insecure = false
+
+################################################################
+# Ping configuration
+################################################################
+
+# Enable ping
+[ping]
+
+################################################################
+# Dynamic configuration backend
+################################################################
+
+# Enable dynamic configurations within a directory
+[providers.file]
+    directory = "dynamic"
+    watch = true
